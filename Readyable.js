@@ -95,7 +95,25 @@
 		}
 	}
 	
-	Readyable.prototype.onReady = function (fn) {};
+	Readyable.prototype.onReady = function (fn) {
+		var queue;
+		
+		// 
+		// If the instance is already in the ready state, then immediately call
+		// the supplied function.
+		// 
+		if (this.isReady) {
+			fn.call(this);
+		}
+		
+		// 
+		// Push the supplied function onto the queue. Even if the instance has
+		// already entered the ready state it may still be useful to keep track
+		// of all ready callbacks that were supplied.
+		// 
+		queue = this.queue;
+		queue[queue.length] = fn;
+	};
 	
 	window.Readyable = Readyable;
 })(jQuery);
