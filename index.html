@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+	</head>
+	<body>
+		<script src="jquery.min.js"></script>
+		<script src="Readyable.js"></script>
+		<script type="text/javascript">
+			var asyncs, widget;
+			
+			asyncs = {};
+			asyncs.profile = {};
+			asyncs.profile.url = "profile.json";
+			asyncs.profile.ready = function (data) {
+				console.log("profile ready");
+				console.log(data);
+			};
+			
+			widget = new Readyable(asyncs);
+			widget.onReady(function () {
+				console.log("widget ready");
+				console.log(arguments);
+			});
+		</script>
+	</body>
+</html>
