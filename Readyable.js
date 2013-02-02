@@ -8,10 +8,15 @@
 
 (function ($) {
 	function Readyable(asyncs) {
-		var total,
+		var isReady,
+			total,
+			queue,
+			successes,
 			key,
 			async,
 			config;
+		
+		isReady = this.isReady = false;
 		
 		// 
 		// Keep track of how many asyncs were supplied so we can test within
@@ -19,6 +24,25 @@
 		// from all of them.
 		// 
 		total = 0;
+		
+		// 
+		// Store any functions supplied to the `onReady` method. These will be
+		// called in order whenever this instance enters its ready state (after
+		// all configured AJAX requests have successfully returned.
+		// 
+		queue = this.queue = [];
+		
+		// 
+		// Keep track of any successful returns from the AJAX requests. When
+		// the length of this array is equal to the final value of `total` this
+		// instance should be considered in the ready state.
+		// 
+		// Originally was going to just tally as with `total` but I figured it
+		// might be useful to be able to see which of the calls successfully
+		// returned so this will store the identifying key of the `asyncs` hash
+		// instead.
+		// 
+		successes = [];
 		
 		for (key in asyncs) {
 			if (asyncs.hasOwnProperty(key)) {
@@ -51,8 +75,20 @@
 				config.url = async.url;
 				config.dataType = async.crossOrigin ? "jsonp" : "json";
 				config.context = this;
-				config.success = function (resp) { console.log("SUCCESS"); };
 				config.error = function (xhr) { console.log("ERROR"); };
+				
+				config.success = (function (async, key) {
+					return function(d) {
+						successes[successes.length] = key;
+						
+						// 
+						// The `ready` callback function should use the instance
+						// as the value of `this` which is supplied to the
+						// $.ajax `success` method via the `context` property.
+						// 
+						async.ready.call(this, d);
+					};
+				})(async, key);
 				
 				$.ajax(config);
 			}
