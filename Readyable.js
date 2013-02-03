@@ -11,7 +11,9 @@
 		var isReady,
 			total,
 			queue,
+			callQueued,
 			successes,
+			data,
 			key,
 			async,
 			config;
@@ -33,6 +35,21 @@
 		queue = this.queue = [];
 		
 		// 
+		// `callQueued` calls each function stored in the `queue` array using
+		// this instance as the context so that any functions supplied to the
+		// `onReady` method as arguments can reference the instance using the
+		// `this` keyword.
+		// 
+		callQueued = (function (self) {
+			return function () {
+				var i, l;
+				for (i = 0, l = queue.length; i < l; i++) {
+					queue[i].call(self);
+				}
+			};
+		})(this);
+		
+		// 
 		// Keep track of any successful returns from the AJAX requests. When
 		// the length of this array is equal to the final value of `total` this
 		// instance should be considered in the ready state.
@@ -43,6 +60,11 @@
 		// instead.
 		// 
 		successes = [];
+		
+		// 
+		// Store the data from each AJAX request.
+		// 
+		data = this.data = [];
 		
 		for (key in asyncs) {
 			if (asyncs.hasOwnProperty(key)) {
@@ -80,6 +102,7 @@
 				config.success = (function (async, key) {
 					return function(d) {
 						successes[successes.length] = key;
+						data[key] = d;
 						
 						// 
 						// The `ready` callback function should use the instance
@@ -87,6 +110,11 @@
 						// $.ajax `success` method via the `context` property.
 						// 
 						async.ready.call(this, d);
+						
+						if (successes.length === total) {
+							isReady = true;
+							callQueued();
+						}
 					};
 				})(async, key);
 				
